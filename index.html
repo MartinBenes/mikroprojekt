@@ -723,7 +723,7 @@ const STEPS = [
       all = all && ok;
       const li = document.createElement('li');
       li.className = ok ? 'ok' : '';
-      li.innerHTML = fmt(label);
+      li.innerHTML = '<span>' + fmt(label) + '</span>';
       li.setAttribute('aria-label', (ok ? 'Splněno: ' : 'Zatím ne: ') + label.replace(/`/g, ''));
       list.appendChild(li);
     });
