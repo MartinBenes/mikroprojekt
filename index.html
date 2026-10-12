@@ -1,0 +1,1050 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Karta od nuly</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: pracovní stůl o třech panelech – návod | editor | náhled stránky v okně prohlížeče na tečkovaném plátně */
+:root {
+  --paper: #eceef1;
+  --panel: #fbfbfc;
+  --chrome: #eef0f3;
+  --ink: #1b1e22;
+  --muted: #5a616c;
+  --line: #d4d8de;
+  --chip: #e7eaee;
+  --marker: #ffd23f;
+  --marker-ink: #1b1e22;
+  --hl: #ffd23f;
+  --ok: #157a4b;
+  --todo: #a0a6af;
+  --warn: #b3261e;
+  --code-bg: #1e2228;
+  --code-ink: #e3e6ea;
+  --code-dim: #8a93a0;
+  --code-line: #2c323a;
+  --stage: #e1e4e8;
+  --dot: #c2c8d0;
+  --canvas: #ffffff;
+  --sans: "IBM Plex Sans", system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141619; --panel: #1b1e22; --chrome: #23272c; --ink: #e8eaed; --muted: #9ba2ad;
+    --line: #2f343b; --chip: #2a2f36; --marker: #f5c83a; --marker-ink: #15171a; --hl: rgba(245, 200, 58, 0.38);
+    --ok: #4cc58c; --todo: #5f6670; --warn: #ff8a80; --code-bg: #101215; --code-ink: #e4e7eb;
+    --code-dim: #7b8490; --code-line: #23282f; --stage: #181b1f; --dot: #2c3138; --canvas: #ffffff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141619; --panel: #1b1e22; --chrome: #23272c; --ink: #e8eaed; --muted: #9ba2ad;
+  --line: #2f343b; --chip: #2a2f36; --marker: #f5c83a; --marker-ink: #15171a; --hl: rgba(245, 200, 58, 0.38);
+  --ok: #4cc58c; --todo: #5f6670; --warn: #ff8a80; --code-bg: #101215; --code-ink: #e4e7eb;
+  --code-dim: #7b8490; --code-line: #23282f; --stage: #181b1f; --dot: #2c3138; --canvas: #ffffff;
+  color-scheme: dark;
+}
+
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-inline: 16px;
+  display: flex;
+  flex-direction: column;
+}
+code, pre, textarea, .mono { font-family: var(--mono); }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* Horní lišta */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px; padding-block: 12px; }
+.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 8px; background: var(--marker); color: var(--marker-ink); font-weight: 700; font-size: 14px; }
+h1 { margin: 0; font-size: 20px; font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; }
+.sub { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.dots { display: flex; flex-wrap: wrap; gap: 6px; flex: 1 1 auto; justify-content: center; }
+.dot {
+  width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid var(--line);
+  background: var(--panel); color: var(--muted); font-size: 12px; font-weight: 600; line-height: 1;
+  cursor: pointer; font-variant-numeric: tabular-nums; transition: background .2s, border-color .2s;
+}
+.dot:hover { border-color: var(--muted); }
+.dot.done { background: var(--ok); border-color: var(--ok); color: var(--panel); }
+.dot.current { background: var(--marker); border-color: var(--marker); color: var(--marker-ink); }
+.dot.done.current { box-shadow: 0 0 0 2px var(--panel), 0 0 0 4px var(--ok); }
+.clock { display: flex; align-items: center; gap: 8px; }
+.clock-time { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.clock-of { color: var(--muted); font-size: 13px; }
+.clock.over .clock-time { color: var(--warn); }
+
+/* Pracovní stůl */
+.desk {
+  flex: 1 1 auto; min-height: 0; display: grid; gap: 12px; padding-bottom: 16px;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr) minmax(0, 1fr);
+}
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* Návod */
+.guide-scroll { flex: 1 1 auto; overflow: auto; padding: 20px 20px 12px; }
+.eyebrow { margin: 0 0 6px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.guide h2 { margin: 0 0 12px; font-size: 27px; line-height: 1.15; font-weight: 700; text-wrap: balance; }
+.guide h2 span { background: linear-gradient(transparent 58%, var(--hl) 58%); padding-inline: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.prose { max-width: 62ch; }
+.prose p { margin: 0 0 10px; }
+.prose ul, .prose ol { margin: 0 0 10px; padding-left: 20px; }
+.prose li { margin-bottom: 4px; }
+.prose code, .checks code { font-size: .88em; background: var(--chip); padding: 1px 5px; border-radius: 4px; white-space: nowrap; }
+.prose .plan { list-style: none; padding-left: 0; }
+.plan li { display: flex; gap: 10px; }
+.plan .n { width: 1.6em; color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
+.plan .min { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.snippets { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 4px; }
+.snippet { border-radius: 8px; overflow: hidden; background: var(--code-bg); }
+.snippet-head { font-size: 12px; color: var(--code-dim); padding: 6px 12px; border-bottom: 1px solid var(--code-line); }
+.snippet pre { margin: 0; padding: 10px 12px; color: var(--code-ink); font-size: 13px; line-height: 1.55; overflow-x: auto; white-space: pre; }
+
+.checks-h { margin: 18px 0 8px; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px; }
+.checks li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 8px; align-items: start; font-size: 14px; color: var(--muted); }
+.checks li::before {
+  content: ""; width: 18px; height: 18px; margin-top: 2px; border-radius: 50%; box-sizing: border-box;
+  border: 1.5px solid var(--todo); transition: background-color .2s, border-color .2s;
+}
+.checks li.ok { color: var(--ink); }
+.checks li.ok::before {
+  border-color: var(--ok); background-color: var(--ok);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.2l2.3 2.3 4.7-5' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-size: 12px; background-position: center; background-repeat: no-repeat;
+}
+.checks li.info::before { border-style: dashed; }
+.tip { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.tip summary { cursor: pointer; font-weight: 600; }
+.tip div { margin-top: 8px; color: var(--muted); max-width: 62ch; }
+.tip div p { margin: 0 0 8px; }
+
+.guide-nav { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.guide-nav .primary { margin-left: auto; }
+
+.btn { font: inherit; font-size: 14px; font-weight: 600; border-radius: 8px; padding: 8px 14px; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.btn.primary.ready { background: var(--marker); color: var(--marker-ink); border-color: var(--marker); animation: nudge .5s ease-out 1; }
+.btn.small { padding: 4px 10px; font-size: 13px; }
+.btn.armed { border-color: var(--warn); color: var(--warn); }
+.btn:disabled { opacity: .4; cursor: default; }
+@keyframes nudge { 0% { transform: translateY(0); } 40% { transform: translateY(-3px); } 100% { transform: translateY(0); } }
+
+/* Editor */
+.editor { background: var(--code-bg); border-color: var(--code-line); }
+.editor:focus-within { border-color: var(--marker); }
+.tabs { display: flex; align-items: stretch; gap: 2px; padding: 8px 8px 0; border-bottom: 1px solid var(--code-line); }
+.tab { font-size: 13px; color: var(--code-dim); background: transparent; border: 0; border-radius: 6px 6px 0 0; padding: 8px 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.tab[aria-selected="true"] { color: var(--code-ink); background: var(--code-line); box-shadow: inset 0 -2px 0 var(--marker); }
+.tab.wanted::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--marker); }
+.save { margin-left: auto; align-self: center; font-size: 12px; color: var(--code-dim); padding-right: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+#code {
+  flex: 1 1 auto; min-height: 0; width: 100%; box-sizing: border-box; resize: none; border: 0; outline: none;
+  background: transparent; color: var(--code-ink); font-size: 14px; line-height: 1.6; padding: 14px 16px;
+  tab-size: 2; white-space: pre; overflow: auto; caret-color: var(--marker);
+}
+#code::placeholder { color: var(--code-dim); }
+.assets { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 16px; color: var(--code-ink); display: flex; flex-direction: column; gap: 14px; }
+.asset-list { display: flex; flex-direction: column; gap: 16px; }
+.asset { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.asset img { max-width: 100%; max-height: 220px; width: auto; height: auto; border-radius: 6px; align-self: flex-start; }
+.asset figcaption { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; font-size: 13px; }
+.asset .name { font-weight: 600; }
+.asset .meta { color: var(--code-dim); font-size: 12px; font-variant-numeric: tabular-nums; }
+.asset-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.asset-msg { font-size: 13px; color: var(--marker); }
+.asset-note { margin: 0; font-size: 13px; color: var(--code-dim); max-width: 60ch; }
+.asset-note code { color: var(--code-ink); background: var(--code-line); padding: 1px 5px; border-radius: 4px; }
+.editor-foot { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 8px; border-top: 1px solid var(--code-line); font-size: 12px; color: var(--code-dim); }
+.editor-foot .pos { margin-right: auto; font-variant-numeric: tabular-nums; }
+.editor .btn { background: transparent; color: var(--code-ink); border-color: var(--code-line); }
+.editor .btn:hover { border-color: var(--code-dim); }
+.editor .btn.armed { border-color: var(--warn); color: var(--warn); }
+
+/* Náhled */
+.preview-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid var(--line); }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; padding: 2px; background: var(--paper); }
+.seg button { font: inherit; font-size: 13px; font-weight: 600; border: 0; background: transparent; color: var(--muted); padding: 5px 12px; border-radius: 6px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+.css-state { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.css-state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--todo); }
+.css-state.on::before { background: var(--ok); }
+.stage {
+  flex: 1 1 auto; min-height: 0; display: flex; padding: 18px;
+  background-color: var(--stage);
+  background-image: radial-gradient(var(--dot) 1px, transparent 1.3px);
+  background-size: 16px 16px;
+}
+.browser { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; border-radius: 8px; overflow: hidden; background: var(--canvas); box-shadow: 0 0 0 1px var(--line), 0 8px 20px rgba(20, 24, 30, 0.12); }
+.browser-bar { display: flex; align-items: center; gap: 10px; padding: 7px 10px; background: var(--chrome); border-bottom: 1px solid var(--line); }
+.lights { display: flex; gap: 5px; }
+.lights i { width: 9px; height: 9px; border-radius: 50%; background: var(--todo); }
+.url { flex: 1; min-width: 0; font-size: 12px; background: var(--panel); border-radius: 999px; padding: 3px 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.url.goal { background: var(--marker); color: var(--marker-ink); }
+#frame { flex: 1 1 auto; width: 100%; min-height: 0; border: 0; display: block; background: var(--canvas); }
+#probe { position: absolute; left: -10000px; top: 0; width: 820px; height: 640px; border: 0; visibility: hidden; pointer-events: none; }
+
+@media (max-width: 1100px) {
+  .desk { grid-template-columns: minmax(280px, 340px) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); }
+  .guide { grid-row: 1 / span 2; }
+}
+@media (max-width: 760px) {
+  html, body { height: auto; }
+  .desk { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; }
+  .guide { grid-row: auto; }
+  .guide-scroll { overflow: visible; }
+  .editor { height: 440px; }
+  .preview { height: 500px; }
+  #code { font-size: 16px; }
+  .dots { order: 3; flex-basis: 100%; justify-content: flex-start; }
+  .stage { padding: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before { transition: none !important; animation: none !important; }
+}
+</style>
+
+<header class="bar">
+  <div class="brand">
+    <span class="brand-mark mono" aria-hidden="true">&lt;/&gt;</span>
+    <div>
+      <h1>Karta od nuly</h1>
+      <p class="sub">HTML a CSS · mikroprojekt na 40 minut</p>
+    </div>
+  </div>
+  <nav class="dots" id="dots" aria-label="Kroky průvodce"></nav>
+  <div class="clock" id="clockBox">
+    <span class="clock-time mono" id="clock">00:00</span>
+    <span class="clock-of">/ 40:00</span>
+    <button type="button" class="btn small" id="clockBtn">Spustit čas</button>
+  </div>
+</header>
+
+<main class="desk">
+  <section class="panel guide" aria-labelledby="stepTitle">
+    <div class="guide-scroll" id="guideScroll">
+      <p class="eyebrow" id="stepMeta">Úvod</p>
+      <h2 id="stepTitle"><span>Co postavíme</span></h2>
+      <div class="prose" id="stepBody"></div>
+      <div class="snippets" id="snippets"></div>
+      <h3 class="checks-h" id="checksH">Kontrola</h3>
+      <ul class="checks" id="checks" aria-live="polite"></ul>
+      <details class="tip" id="tipBox">
+        <summary>Nápověda</summary>
+        <div id="tip"></div>
+      </details>
+    </div>
+    <footer class="guide-nav">
+      <button type="button" class="btn" id="prevBtn">← Zpět</button>
+      <button type="button" class="btn" id="catchBtn" title="Nahradí kód v editoru hotovým stavem po tomto kroku">Dohnat krok</button>
+      <button type="button" class="btn primary" id="nextBtn">Další krok →</button>
+    </footer>
+  </section>
+
+  <section class="panel editor" aria-label="Editor kódu">
+    <div class="tabs" role="tablist" aria-label="Soubory">
+      <button type="button" role="tab" class="tab mono" id="tab-html" aria-selected="true" aria-controls="code">index.html</button>
+      <button type="button" role="tab" class="tab mono" id="tab-css" aria-selected="false" aria-controls="code">style.css</button>
+      <button type="button" role="tab" class="tab mono" id="tab-img" aria-selected="false" aria-controls="assets">petrin.jpg</button>
+      <span class="save" id="saveState">Ukládá se v tomto prohlížeči</span>
+    </div>
+    <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" aria-label="Obsah souboru"></textarea>
+    <div class="assets" id="assets" hidden>
+      <p class="asset-note">Obrázky leží ve stejné složce jako index.html. Proto v <code>src</code> stačí napsat jen název souboru.</p>
+      <div class="asset-list" id="assetList"></div>
+      <div class="asset-actions">
+        <button type="button" class="btn small" id="uploadBtn">Nahrát vlastní fotku</button>
+        <input type="file" id="upload" accept="image/*" hidden>
+        <span class="asset-msg" id="assetMsg" aria-live="polite"></span>
+      </div>
+      <p class="asset-note">Fotku si do počítače uložíte pravým tlačítkem myši a volbou „Uložit obrázek jako“.</p>
+    </div>
+    <div class="editor-foot">
+      <span class="pos mono" id="pos">ř. 1, sl. 1</span>
+      <button type="button" class="btn small" id="copyBtn">Kopírovat soubor</button>
+      <button type="button" class="btn small" id="resetBtn">Začít znovu</button>
+    </div>
+  </section>
+
+  <section class="panel preview" aria-label="Náhled">
+    <div class="preview-head">
+      <div class="seg" role="group" aria-label="Co zobrazit">
+        <button type="button" id="viewMine" aria-pressed="true">Moje stránka</button>
+        <button type="button" id="viewGoal" aria-pressed="false">Cíl</button>
+      </div>
+      <span class="css-state" id="cssState">style.css není připojen</span>
+    </div>
+    <div class="stage">
+      <div class="browser">
+        <div class="browser-bar">
+          <span class="lights" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="url mono" id="url">index.html</span>
+        </div>
+        <iframe id="frame" title="Náhled stránky"></iframe>
+      </div>
+    </div>
+  </section>
+</main>
+<iframe id="probe" title="Kontrola" aria-hidden="true" tabindex="-1"></iframe>
+
+<script>
+/* ---------- Soubory projektu ---------- */
+const PETRIN = 'data:image/jpeg;base64,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www8O4Qwwwwwwwwwwwwwwwwwwwwwwwwwww8cccccccccccdXuscccccccccccccdPustvuMcccccccMMMMMMMMMMN6bc8MMMMMMMMMMMMLW59ze253cMMMMMMMMMMMMMMMMNETWcMMMMMMMMMMNHf9P0z4/+P7eMMMMM888888888882re888888888882YMTwnTrQj8UJc888//AP8A/wD/AP8A/wD/APsjuPnz/wD/AP8A/wD/AP8A+v8AFxXYFON4sxL3X/8A/wAAAAAAAAAAAJyu0iMAAAAAAAAAbIJivOfAvPeQKIgAAA0000000000UP4OsU000000001Xs8VSlX19WRk9+k000AkMQsnKyhUyxeNWG08Qw8sEMzajVqUL/wDrCZnh88AAA85vbSdvdZIYf9ZHoqLFM0sgc8o1kFXQTzySRxzBN099tH3uQfDYlqcHFnPf/wBVIXO3sbsD/brEs6NYoO8W3YgQP76awgmkvXU3/wB/e+2nk1XnPfO33ULIqH33ze6WJURbz/r2oIIILxr/AP23/wD3zffXfW1//UTVjggggokfSfF2PfP/AL32QIJT315737/+n3331/8A/u99tCCCCCOCZVNuSAB8zj+pi1c/999999N+9t+OdOzzsx6ulCCCCCCWN99tiVD9999999999999999999999999M8/OMqKCCC+999CCaw9999999999999999999999999999999j/jdB/giCC/9//EACkRAQACAQMCBAYDAAAAAAAAAAEAETEQIUEgUTBAUJFhcYGhsfDB0eH/2gAIAQMBAT8Q9YWyKDV8i8fz6UiBllB9KMVkiOwx6TbqIhv2l8RTbf1PSHbKY/kN19CLs5XXtMlv0m9DNL73/n3jKQ7XtvnH++xLCekhTYtofj87+3xlCpgc/vt94a+d6QFtR0kZ2+4ffP8AcBbjZvRXP9Tk7h+PI1pXlRfzpsSuH3/mUO8r5Z/b/wAnJ8K9nx6lSpUqVK8mixwP4juGVO/N/X5xhLj+T92gpGR/NeMECGoYYSJ5IACXHivrc3qzffE3Bmu+Ituyn6frFmfEAAQQSSabLLL5IAABSa3cazS/3mWqp2YgNjHvFvVXiAAINAdAMMMPkQAAbAMxCnf9+8K5NrfP9ceKAAQQQEHLoOSMMMPWAqNC2bm0ELuJ8xPBFdkY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';
+const BUILTIN_ASSETS = [{ name: 'petrin.jpg', data: PETRIN, builtin: true }];
+
+/* ---------- Hotové stavy kódu po jednotlivých krocích ---------- */
+const FONTS_LINK = '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap">';
+const CSS_LINK = '<link rel="stylesheet" href="style.css">';
+
+const BODY_HEAD = `  <article class="karta">
+    <img class="foto" src="petrin.jpg" alt="Petřínská rozhledna nad korunami stromů">
+    <div class="obsah">
+      <div class="hlavicka">
+        <div class="avatar">P</div>
+        <div>
+          <h2>Petřínská rozhledna</h2>
+          <p class="podtitul">Rozhledna · Praha 1</p>
+        </div>
+      </div>
+    </div>
+  </article>`;
+
+const TEXT_AKCE = `      <p class="text">Ocelová rozhledna z roku 1891. Je vysoká 63,5 metru a na vrchol vede 299 schodů.</p>
+      <div class="akce">
+        <button>Trasa</button>
+        <button>Uložit</button>
+      </div>`;
+
+const BODY_FULL = BODY_HEAD.replace('    </div>\n  </article>', TEXT_AKCE + '\n    </div>\n  </article>');
+
+function page(o) {
+  const links = [];
+  if (o.fonts) links.push('  ' + FONTS_LINK);
+  if (o.css) links.push('  ' + CSS_LINK);
+  return '<!DOCTYPE html>\n<html lang="cs">\n<head>\n  <meta charset="utf-8">\n  <title>Moje karta</title>\n' +
+    (links.length ? links.join('\n') + '\n' : '') +
+    '</head>\n<body>\n' + (o.body || '') + '\n</body>\n</html>\n';
+}
+
+const cssBody = font => `body {
+  font-family: ${font};
+  background: #f1f3f4;
+  padding: 24px;
+}
+`;
+const SHADOW = `  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3),
+              0 1px 3px 1px rgba(60, 64, 67, 0.15);`;
+const cssKarta = (overflow, shadow) => `
+.karta {
+  background: white;
+  max-width: 340px;
+  border-radius: 12px;${overflow ? '\n  overflow: hidden;' : ''}${shadow ? '\n' + SHADOW : ''}
+}
+
+.obsah {
+  padding: 16px;
+}
+`;
+const CSS_FOTO = `
+.foto {
+  display: block;
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+`;
+const CSS_TYPE = `
+h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 400;
+  color: #202124;
+}
+
+.podtitul {
+  margin: 0;
+  font-size: 14px;
+  color: #5f6368;
+}
+
+.text {
+  color: #3c4043;
+  line-height: 1.5;
+}
+`;
+const CSS_FLEX = `
+.hlavicka {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1a73e8;
+  color: white;
+  display: grid;
+  place-items: center;
+  font-weight: 500;
+}
+`;
+const CSS_BUTTONS = `
+.akce {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+button {
+  font: inherit;
+  font-weight: 500;
+  color: #1a73e8;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #e8f0fe;
+}
+`;
+const CSS_HOVER = `
+.karta {
+  transition: box-shadow 0.2s;
+}
+
+.karta:hover {
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.3),
+              0 2px 6px 2px rgba(60, 64, 67, 0.15);
+}
+`;
+
+const ROBOTO = "'Roboto', Arial, sans-serif";
+const ARIAL = 'Arial, sans-serif';
+const H_CSS = page({ css: true, body: BODY_FULL });
+const H_FONTS = page({ fonts: true, css: true, body: BODY_FULL });
+const AFTER = [
+  { html: '', css: '' },
+  { html: page({}), css: '' },
+  { html: page({ body: BODY_HEAD }), css: '' },
+  { html: page({ body: BODY_FULL }), css: '' },
+  { html: H_CSS, css: cssBody(ARIAL) },
+  { html: H_CSS, css: cssBody(ARIAL) + cssKarta(false, false) },
+  { html: H_CSS, css: cssBody(ARIAL) + cssKarta(true, false) + CSS_FOTO },
+  { html: H_CSS, css: cssBody(ARIAL) + cssKarta(true, true) + CSS_FOTO },
+  { html: H_FONTS, css: cssBody(ROBOTO) + cssKarta(true, true) + CSS_FOTO + CSS_TYPE },
+  { html: H_FONTS, css: cssBody(ROBOTO) + cssKarta(true, true) + CSS_FOTO + CSS_TYPE + CSS_FLEX },
+  { html: H_FONTS, css: cssBody(ROBOTO) + cssKarta(true, true) + CSS_FOTO + CSS_TYPE + CSS_FLEX + CSS_BUTTONS },
+];
+AFTER.push({ html: AFTER[10].html, css: AFTER[10].css + CSS_HOVER });
+const GOAL = AFTER[10];
+
+/* ---------- Pomocné funkce pro kontroly ---------- */
+const px = v => parseFloat(v) || 0;
+const isClear = c => !c || c === 'transparent' || c === 'rgba(0, 0, 0, 0)';
+const rgb = c => (c.match(/[\d.]+/g) || []).map(Number);
+function kids(el) { return el ? [...el.children] : []; }
+function imgSrc(html) { const m = html.match(/<img\b[^>]*\bsrc\s*=\s*["']?([^"'\s>]+)/i); return m ? m[1] : ''; }
+
+/* ---------- Kroky ---------- */
+const STEPS = [
+  {
+    title: 'Co postavíme', files: ['html'], min: 2, plan: true,
+    body: `<p>Za 40 minut napíšete od prázdného souboru kartu, jakou znáte z Google Map nebo z Google Discover: fotka přes celou šířku, kulatý avatar, nadpis, šedý podtitul, krátký text a dvě modrá tlačítka.</p>
+<p>Vpravo je zobrazený <b>Cíl</b>. Projekt má tři soubory: <code>index.html</code> určuje, <em>co</em> na stránce je, <code>style.css</code> určuje, <em>jak</em> to vypadá, a <code>petrin.jpg</code> je fotka. Najdete je v záložkách editoru.</p>
+<p>Každý krok má kontrolu. Když jsou všechny body zelené, tlačítko <b>Další krok</b> zežloutne.</p>`,
+    snippets: [], checks: [],
+    tip: `<p>Spusťte čas vpravo nahoře. Plán počítá s 38 minutami práce a dvěma minutami rezervy.</p><p>Kdo nestíhá, může použít tlačítko <b>Dohnat krok</b>, které doplní hotový kód. Je to poslední možnost: přepíše vše, co je v editoru napsané.</p>`
+  },
+  {
+    title: 'Kostra stránky', files: ['html'], min: 3,
+    body: `<p>Každá webová stránka má stejnou kostru. Prohlížeč z ní pozná, že jde o HTML, v jakém jazyce je obsah a v jakém kódování má text číst.</p>
+<ul><li><code>&lt;head&gt;</code> obsahuje informace <em>o</em> stránce. Na stránce se nezobrazují.</li><li><code>&lt;body&gt;</code> obsahuje vše, co se zobrazí.</li></ul>
+<p><b>Úkol:</b> napište kostru do souboru index.html. Párové značky je třeba uzavřít: ke každému <code>&lt;head&gt;</code> patří <code>&lt;/head&gt;</code>.</p>`,
+    snippets: [{ where: 'index.html · celý soubor', code: AFTER[1].html.trimEnd() }],
+    checks: [
+      ['Soubor začíná `<!DOCTYPE html>`', c => /^\s*<!doctype\s+html\s*>/i.test(c.html)],
+      ['Prvek `<html>` má `lang="cs"`', c => /<html[^>]*\blang\s*=\s*["']?cs\b/i.test(c.html)],
+      ['V hlavičce je `<meta charset="utf-8">`', c => /<meta[^>]*charset\s*=\s*["']?utf-8/i.test(c.html)],
+      ['Stránka má `<title>` s textem', c => /<title>\s*[^<\s][^<]*<\/title>/i.test(c.html)],
+      ['Je tam `<head>` i `<body>` a oba jsou uzavřené', c => /<head[\s>]/i.test(c.html) && /<\/head>/i.test(c.html) && /<body[\s>]/i.test(c.html) && /<\/body>/i.test(c.html)],
+    ],
+    tip: `<p>Odsazení prohlížeč nepotřebuje, ale výrazně pomáhá čitelnosti: hned je vidět, co je uvnitř čeho. Klávesa Tab v editoru vloží dvě mezery. Editor opustíte klávesou Esc a pak Tab.</p><p>Text v <code>&lt;title&gt;</code> se zobrazí na záložce prohlížeče, ne na stránce.</p>`
+  },
+  {
+    title: 'Fotka a hlavička', files: ['html'], min: 5,
+    body: `<p>Celá karta bude jeden prvek <code>&lt;article&gt;</code>: samostatný kus obsahu, který dává smysl i sám o sobě. Atribut <code>class</code> je jmenovka, podle které prvek najdete v CSS.</p>
+<p><code>&lt;img&gt;</code> je nepárová značka. Atribut <code>src</code> obsahuje název souboru s obrázkem, <code>alt</code> obrázek popisuje pro čtečky obrazovky a pro případ, že se nenačte. Soubor petrin.jpg leží ve stejné složce jako index.html, proto stačí uvést jen jeho název. Jde o relativní cestu.</p>
+<p>Texty zabalíme do <code>&lt;div class="obsah"&gt;</code>. Fotka pak může sahat až k okrajům karty a texty budou mít odstup.</p>
+<p><b>Úkol:</b> dovnitř <code>&lt;body&gt;</code> napište kartu s fotkou, avatarem, nadpisem a podtitulem.</p>`,
+    snippets: [{ where: 'index.html · dovnitř <body>', code: BODY_HEAD }],
+    checks: [
+      ['V `<body>` je `<article class="karta">`', c => !!c.$('body article.karta')],
+      ['V kartě je `<img>` s popisem v `alt`', c => { const i = c.$('.karta img'); return !!i && (i.getAttribute('alt') || '').trim().length > 3; }],
+      ['Obrázek se načetl (název souboru v `src` sedí)', c => { const i = c.$('.karta img'); return !!i && i.complete && i.naturalWidth > 0; }],
+      ['V kartě je `<div class="obsah">` a v něm `<div class="hlavicka">`', c => !!c.$('.karta .obsah .hlavicka')],
+      ['Avatar `<div class="avatar">` s jedním písmenem', c => { const a = c.$('.hlavicka .avatar'); const t = a ? a.textContent.trim() : ''; return t.length >= 1 && t.length <= 2; }],
+      ['Nadpis `<h2>` a podtitul `<p class="podtitul">`', c => { const h = c.$('.hlavicka h2'); return !!h && h.textContent.trim().length > 0 && !!c.$('.hlavicka p.podtitul'); }],
+    ],
+    tip: `<p>Fotka je zatím obrovská a přetéká. To je v pořádku, zmenšíte ji v kroku 6.</p><p>Pokud se místo fotky zobrazí jen ikona a text z <code>alt</code>, prohlížeč soubor nenašel. Zkontrolujte překlep v <code>src="petrin.jpg"</code>: záleží i na velikosti písmen.</p><p><code>&lt;div&gt;</code> nenese žádný význam, slouží jen k seskupení prvků.</p>`
+  },
+  {
+    title: 'Text a tlačítka', files: ['html'], min: 3,
+    body: `<p>Pod hlavičku přijde odstavec s popisem a pod něj blok s tlačítky. Oba patří ještě dovnitř <code>&lt;div class="obsah"&gt;</code>, tedy před jeho uzavírací <code>&lt;/div&gt;</code>.</p>
+<p><b>Úkol:</b> dopište text a dvě tlačítka. Náhled zatím ukazuje stránku bez vlastního CSS, jen s výchozími styly prohlížeče.</p>`,
+    snippets: [{ where: 'index.html · za hlavičku, před </div> obsahu', code: TEXT_AKCE }],
+    checks: [
+      ['V obsahu je odstavec `<p class="text">`', c => { const p = c.$('.obsah > p.text'); return !!p && p.textContent.trim().length > 10; }],
+      ['V obsahu je blok `<div class="akce">`', c => !!c.$('.obsah > .akce')],
+      ['V akcích jsou aspoň dvě tlačítka `<button>`', c => c.doc.querySelectorAll('.karta .akce button').length >= 2],
+      ['Pořadí: hlavička, text, akce', c => { const k = kids(c.$('.obsah')); const i = s => k.findIndex(e => e.matches(s)); return i('.hlavicka') > -1 && i('.hlavicka') < i('p.text') && i('p.text') < i('.akce'); }],
+    ],
+    tip: `<p>Tlačítka mají výchozí vzhled prohlížeče. V posledním kroku ho přepíšete.</p><p>Nejčastější chyba: odstavec skončí za <code>&lt;/div&gt;</code>, a tedy mimo obsah. Pomůže odsazení: odstavec má být odsazený stejně jako <code>&lt;div class="hlavicka"&gt;</code>.</p><p>Bez CSS prohlížeč použije výchozí patkové písmo, obvykle Times New Roman. Proto se písmo nastavuje hned v prvním pravidle CSS.</p>`
+  },
+  {
+    title: 'Připojení CSS', files: ['html', 'css'], min: 3,
+    body: `<p>Vzhled patří do samostatného souboru. HTML se o něm dozví prostřednictvím <code>&lt;link&gt;</code> v hlavičce.</p>
+<p><b>Úkol 1:</b> do <code>&lt;head&gt;</code> v index.html přidejte odkaz na style.css. Kontrolka nad náhledem zezelená.</p>
+<p><b>Úkol 2:</b> přepněte na záložku style.css a napište první pravidlo. Pravidlo se skládá ze <em>selektoru</em> (koho se týká) a ze složených závorek s <em>deklaracemi</em> ve tvaru vlastnost: hodnota. Každá deklarace končí středníkem.</p>`,
+    snippets: [
+      { where: 'index.html · do <head>', code: CSS_LINK },
+      { where: 'style.css', code: cssBody(ARIAL).trimEnd() },
+    ],
+    checks: [
+      ['V hlavičce je `<link rel="stylesheet" href="style.css">`', c => c.linked],
+      ['Stránka má nastavené písmo', c => c.linked && /body\s*\{[^}]*font-family\s*:/i.test(c.css)],
+      ['Pozadí stránky je šedé', c => { const b = c.cs(c.doc.body).backgroundColor; return !isClear(b) && b !== 'rgb(255, 255, 255)'; }],
+      ['Obsah má odstup od okraje (`padding`)', c => px(c.cs(c.doc.body).paddingTop) > 0],
+    ],
+    tip: `<p><code>#f1f3f4</code> je světle šedá, kterou Google používá jako pozadí. Zápis <code>#rrggbb</code> tvoří tři dvojice šestnáctkových číslic pro červenou, zelenou a modrou složku, každá od 00 do ff.</p><p>Chybějící středník způsobí, že prohlížeč zahodí i následující deklaraci.</p>`
+  },
+  {
+    title: 'Karta jako krabice', files: ['css'], min: 4,
+    body: `<p>Každý prvek na stránce je obdélník. Uprostřed je obsah, kolem něj vnitřní okraj <code>padding</code>, pak rámeček <code>border</code> a nakonec vnější okraj <code>margin</code>. Tomu se říká <b>box model</b>.</p>
+<p>Selektor začínající tečkou, například <code>.karta</code>, vybere prvky s danou třídou.</p>
+<p><b>Úkol:</b> udělejte z článku bílou kartu se zaoblenými rohy a dejte obsahu v <code>.obsah</code> vnitřní okraj.</p>`,
+    snippets: [{ where: 'style.css · na konec', code: cssKarta(false, false).trim() }],
+    checks: [
+      ['Karta má bílé pozadí', c => c.cs(c.$('.karta')).backgroundColor === 'rgb(255, 255, 255)'],
+      ['Karta má omezenou šířku (`max-width`)', c => c.cs(c.$('.karta')).maxWidth !== 'none'],
+      ['Karta má zaoblené rohy (`border-radius`)', c => px(c.cs(c.$('.karta')).borderTopLeftRadius) > 0],
+      ['Obsah má vnitřní okraj (`padding`)', c => px(c.cs(c.$('.obsah')).paddingTop) > 0],
+    ],
+    tip: `<p>Fotka z karty stále přečnívá. Obrázek si drží svou skutečnou šířku 680 px, dokud mu CSS neurčí jinou. To přijde hned v dalším kroku.</p><p>Proč <code>max-width</code>, a ne <code>width</code>? Pevná šířka 340 px by na úzkém displeji přetekla. <code>max-width</code> znamená „nejvýš 340 px, klidně méně“.</p>`
+  },
+  {
+    title: 'Fotka přes celou šířku', files: ['css', 'img'], min: 4,
+    body: `<p>Fotka má 680 × 360 pixelů, karta jen 340. Nastavíme fotce šířku přesně podle karty a výšku 180 px.</p>
+<p>Při změně poměru stran by se obrázek zdeformoval. <code>object-fit: cover</code> ho místo toho ořízne tak, aby rámeček vyplnil.</p>
+<p>Fotka má ostré rohy a přečnívá přes zaoblení karty. <code>overflow: hidden</code> kartě určí, ať ořízne vše, co z ní vyčnívá.</p>
+<p><b>Úkol:</b> nastavte fotku a do pravidla <code>.karta</code> přidejte ořez.</p>`,
+    snippets: [
+      { where: 'style.css · do pravidla .karta', code: 'overflow: hidden;' },
+      { where: 'style.css · na konec', code: CSS_FOTO.trim() },
+    ],
+    checks: [
+      ['Fotka je stejně široká jako karta', c => { const i = c.$('.karta img').getBoundingClientRect(); const k = c.$('.karta').getBoundingClientRect(); return Math.abs(i.width - k.width) < 2; }],
+      ['Fotka je vysoká 120 až 240 px', c => { const h = c.$('.karta img').getBoundingClientRect().height; return h >= 120 && h <= 240; }],
+      ['Fotka se nedeformuje (`object-fit: cover`)', c => c.cs(c.$('.karta img')).objectFit === 'cover'],
+      ['Pod fotkou není mezera (`display: block`)', c => c.cs(c.$('.karta img')).display === 'block'],
+      ['Karta ořízne rohy fotky (`overflow: hidden`)', c => c.cs(c.$('.karta')).overflow === 'hidden' || c.cs(c.$('.karta')).overflowX === 'hidden'],
+    ],
+    tip: `<p>Zkuste místo <code>cover</code> napsat <code>fill</code> a sledujte, jak se rozhledna zdeformuje.</p><p>Bez <code>display: block</code> by pod fotkou zůstala úzká mezera. Obrázek je totiž řádkový prvek: sedí na účaří textu a pod sebou nechává místo pro dotahy písmen jako g nebo y.</p>`
+  },
+  {
+    title: 'Stín', files: ['css'], min: 2,
+    body: `<p>Bílá karta na šedém pozadí trochu splývá. Google ji odliší jemným stínem, jako by ležela milimetr nad podkladem.</p>
+<p>Hodnoty <code>box-shadow</code> se čtou zleva: posun vodorovně, posun svisle, rozmazání, roztažení a barva. Více stínů oddělených čárkou se skládá přes sebe.</p>
+<p><b>Úkol:</b> přidejte stín do pravidla <code>.karta</code>, před jeho uzavírací závorku.</p>`,
+    snippets: [{ where: 'style.css · do pravidla .karta', code: SHADOW.replace(/^ {2}/gm, '') }],
+    checks: [
+      ['Karta má stín', c => c.cs(c.$('.karta')).boxShadow !== 'none'],
+      ['Stín má dvě vrstvy', c => (c.cs(c.$('.karta')).boxShadow.match(/rgba?\(/g) || []).length >= 2],
+      ['Stín je jemný (rozmazání nejvýš 8 px)', c => { const s = c.cs(c.$('.karta')).boxShadow; const b = [...s.matchAll(/\)\s*(-?[\d.]+)px\s+(-?[\d.]+)px\s+([\d.]+)px/g)].map(m => +m[3]); return b.length > 0 && b.every(v => v <= 8); }],
+    ],
+    tip: `<p><code>rgba(60, 64, 67, 0.3)</code> je tmavá šedomodrá s krytím 30 %. Google nepoužívá čistě černé stíny. Zkuste zvětšit posun a rozmazání a sledujte, jak se karta „zvedá“.</p>`
+  },
+  {
+    title: 'Písmo', files: ['html', 'css'], min: 4,
+    body: `<p>Google používá v rozhraních písmo Roboto. Nemusí být nainstalované v počítači, stránka si ho stáhne z Google Fonts.</p>
+<p><b>Úkol 1:</b> do <code>&lt;head&gt;</code> přidejte odkaz na písmo, a to <em>nad</em> odkaz na style.css.</p>
+<p><b>Úkol 2:</b> ve style.css vyměňte písmo u <code>body</code> a nastavte nadpis, podtitul a text.</p>`,
+    snippets: [
+      { where: 'index.html · do <head>', code: FONTS_LINK },
+      { where: 'style.css · změňte v pravidle body', code: `font-family: ${ROBOTO};` },
+      { where: 'style.css · na konec', code: CSS_TYPE.trim() },
+    ],
+    checks: [
+      ['V hlavičce je odkaz na Google Fonts', c => /fonts\.googleapis\.com/i.test(c.html)],
+      ['Stránka používá písmo Roboto', c => /roboto/i.test(c.cs(c.doc.body).fontFamily)],
+      ['Nadpis má normální řez (`font-weight: 400`)', c => c.cs(c.$('.karta h2')).fontWeight === '400'],
+      ['Nadpis nemá výchozí okraj (`margin: 0`)', c => px(c.cs(c.$('.karta h2')).marginTop) === 0],
+      ['Podtitul má jinou, šedší barvu než nadpis', c => c.cs(c.$('.podtitul')).color !== c.cs(c.$('.karta h2')).color],
+    ],
+    tip: `<p>Arial a sans-serif za Robotem jsou záložní písma. Pokud se Roboto nestáhne, například bez připojení k internetu, prohlížeč použije další písmo v pořadí.</p><p>Prohlížeč dává nadpisům a odstavcům výchozí okraje. Proto je u <code>h2</code> a <code>.podtitul</code> nastavujeme na 0.</p>`
+  },
+  {
+    title: 'Hlavička vedle sebe', files: ['css'], min: 4,
+    body: `<p>Avatar je zatím nad nadpisem, protože <code>div</code> je blokový prvek a zabírá celý řádek. <code>display: flex</code> poskládá potomky hlavičky vedle sebe do řady.</p>
+<p><b>Úkol:</b> nastavte hlavičku jako flex kontejner a z avataru udělejte modrý kruh s písmenem uprostřed.</p>`,
+    snippets: [{ where: 'style.css · na konec', code: CSS_FLEX.trim() }],
+    checks: [
+      ['Hlavička skládá prvky vedle sebe (`display: flex`)', c => c.cs(c.$('.hlavicka')).display === 'flex'],
+      ['Prvky v hlavičce jsou svisle na středu', c => c.cs(c.$('.hlavicka')).alignItems === 'center'],
+      ['Avatar je čtverec velký 32 až 56 px', c => { const r = c.$('.avatar').getBoundingClientRect(); return Math.abs(r.width - r.height) < 1 && r.width >= 32 && r.width <= 56; }],
+      ['Avatar je kulatý', c => { const a = c.$('.avatar'); const r = c.cs(a).borderTopLeftRadius; return /50%/.test(r) || px(r) >= a.getBoundingClientRect().width / 2 - 0.5; }],
+      ['Avatar má barevné pozadí', c => { const b = c.cs(c.$('.avatar')).backgroundColor; return !isClear(b) && b !== 'rgb(255, 255, 255)'; }],
+    ],
+    tip: `<p><code>border-radius: 50%</code> udělá ze čtverce kruh. Z obdélníku by vznikla elipsa, proto musí mít avatar stejnou šířku i výšku.</p><p><code>display: grid</code> a <code>place-items: center</code> vycentrují písmeno vodorovně i svisle.</p>`
+  },
+  {
+    title: 'Tlačítka', files: ['css'], min: 4,
+    body: `<p>Poslední část. Tlačítka v kartách Google nemají rámeček ani pozadí, jen modrý text. Světle modré pozadí se objeví až po najetí myší.</p>
+<p><b>Úkol:</b> zarovnejte tlačítka doprava a přepište jejich výchozí vzhled. Pak na ně v náhledu najeďte myší.</p>`,
+    snippets: [{ where: 'style.css · na konec', code: CSS_BUTTONS.trim() }],
+    checks: [
+      ['Akce jsou flex a zarovnané doprava', c => { const s = c.cs(c.$('.akce')); return s.display === 'flex' && /flex-end|end|right/.test(s.justifyContent); }],
+      ['Tlačítka nemají rámeček', c => { const s = c.cs(c.$('.akce button')); return s.borderTopStyle === 'none' || px(s.borderTopWidth) === 0; }],
+      ['Tlačítka mají modrý text', c => { const [r, g, b] = rgb(c.cs(c.$('.akce button')).color); return b > r + 40 && b > g; }],
+      ['Nad tlačítkem se kurzor změní na ručičku', c => c.cs(c.$('.akce button')).cursor === 'pointer'],
+      ['Tlačítka reagují na myš (`button:hover`)', c => /button\s*:hover/i.test(c.css)],
+    ],
+    tip: `<p><code>font: inherit</code> znamená „převezmi písmo od rodiče“. Formulářové prvky včetně tlačítek písmo stránky samy nedědí.</p><p><code>:hover</code> je pseudotřída. Pravidlo <code>button:hover</code> platí jen ve chvíli, kdy je nad tlačítkem kurzor myši.</p>`
+  },
+  {
+    title: 'Bonus: vlastní karta', files: ['img', 'html', 'css'], min: 0, bonus: true, optional: true,
+    body: `<p>Karta je hotová. Pokud zbývá čas, upravte ji podle sebe:</p>
+<ul><li>Na záložce <b>petrin.jpg</b> nahrajte vlastní fotku a v index.html změňte <code>src</code> na její název.</li><li>Změňte název místa, popis, písmeno v avataru a barvu avataru.</li><li>Aby se karta po najetí myší zvedla, přidejte pravidlo <code>.karta:hover</code> s větším stínem a <code>transition</code>.</li></ul>
+<p>Nakonec si práci odneste. Vytvořte složku, tlačítkem <b>Kopírovat soubor</b> do ní uložte index.html a style.css a fotku uložte pravým tlačítkem myši volbou „Uložit obrázek jako“. Pak otevřete index.html v prohlížeči.</p>`,
+    snippets: [{ where: 'style.css · na konec', code: CSS_HOVER.trim() }],
+    checks: [
+      ['Karta má vlastní fotku', c => { const s = imgSrc(c.html); const i = c.$('.karta img'); return !!s && !/petrin\.jpg$/i.test(s) && !!i && i.naturalWidth > 0; }],
+      ['Karta má vlastní obsah (jiné místo než Petřín)', c => { const h = c.$('.karta h2'); return !!h && h.textContent.trim() !== 'Petřínská rozhledna' && h.textContent.trim().length > 0; }],
+      ['Karta reaguje na myš (`.karta:hover`)', c => /\.karta\s*:hover/i.test(c.css)],
+      ['Změna je plynulá (`transition`)', c => /transition\s*:/i.test(c.css)],
+    ],
+    tip: `<p>Dvě pravidla <code>.karta</code> v jednom souboru nevadí. Prohlížeč je sloučí, a pokud si dvě deklarace odporují, platí ta, která je v souboru níž. To je kaskáda.</p><p>Ve skutečném prohlížeči otevřete klávesou F12 vývojářské nástroje a vyberte kartu. Uvidíte její box model i všechna pravidla, která se na ni uplatňují.</p>`
+  },
+];
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const KEY = 'karta-od-nuly-v2';
+  const LINK_RE = /<link\b[^>]*href\s*=\s*["']?(?:\.\/)?style\.css["']?[^>]*>/i;
+  const DEFAULTS = { step: 0, html: '', css: '', file: 'html', view: 'goal', done: [], elapsed: 0, running: false, startedAt: 0, assets: [] };
+
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { saved = null; }
+  const st = Object.assign({}, DEFAULTS, saved || {});
+  let canSave = true;
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(st)); canSave = true; } catch (e) { canSave = false; }
+    $('saveState').textContent = canSave ? 'Ukládá se v tomto prohlížeči' : 'Neukládá se – po zavření se práce ztratí';
+  }
+
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const fmt = s => esc(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+  const ta = $('code'), frame = $('frame'), probe = $('probe');
+
+  /* ---------- Stavba stránky pro náhled ---------- */
+  function build(html, css) {
+    if (!html.trim()) {
+      return { linked: false, doc: '<!DOCTYPE html><html><body style="margin:0;height:100vh;display:grid;place-items:center;font:15px system-ui,sans-serif;color:#80868b;text-align:center;padding:0 16px">Prázdná stránka. Začněte psát do index.html.</body></html>' };
+    }
+    const linked = LINK_RE.test(html);
+    let doc = html;
+    allAssets().forEach(a => {
+      const n = a.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      doc = doc.replace(new RegExp('(\\bsrc\\s*=\\s*["\']?)(?:\\./)?' + n + '(?=["\'\\s>])', 'g'), (m, p) => p + a.data);
+      css = css.replace(new RegExp('url\\(\\s*(["\']?)(?:\\./)?' + n + '\\1\\s*\\)', 'g'), () => 'url("' + a.data + '")');
+    });
+    if (linked) doc = doc.replace(LINK_RE, () => '<style>\n' + css + '\n</style>');
+    return { linked, doc };
+  }
+  function allAssets() { return BUILTIN_ASSETS.concat(st.assets || []); }
+
+  let timer = null;
+  function schedule() { clearTimeout(timer); timer = setTimeout(refresh, 320); }
+  function refresh() {
+    const mine = build(st.html, st.css);
+    probe.srcdoc = mine.doc;
+    if (st.view === 'goal') {
+      frame.srcdoc = build(GOAL.html, GOAL.css).doc;
+      $('url').textContent = 'cíl · index.html';
+      $('url').classList.add('goal');
+    } else {
+      frame.srcdoc = mine.doc;
+      $('url').textContent = 'index.html';
+      $('url').classList.remove('goal');
+    }
+    const cs = $('cssState');
+    cs.classList.toggle('on', mine.linked);
+    cs.textContent = mine.linked ? 'style.css je připojen' : 'style.css není připojen';
+    $('viewMine').setAttribute('aria-pressed', String(st.view === 'mine'));
+    $('viewGoal').setAttribute('aria-pressed', String(st.view === 'goal'));
+  }
+
+  /* ---------- Kontroly ---------- */
+  probe.addEventListener('load', runChecks);
+  function runChecks() {
+    const step = STEPS[st.step];
+    const list = $('checks');
+    list.innerHTML = '';
+    $('checksH').hidden = step.checks.length === 0;
+    if (!step.checks.length) { markDone(true); return; }
+    let doc = null, win = null;
+    try { doc = probe.contentDocument; win = probe.contentWindow; } catch (e) { doc = null; }
+    const c = {
+      doc, win, html: st.html, css: st.css, linked: LINK_RE.test(st.html),
+      $: s => doc.querySelector(s), cs: el => win.getComputedStyle(el)
+    };
+    const empty = !st.html.trim();
+    let all = true;
+    step.checks.forEach(([label, fn]) => {
+      let ok = false;
+      if (!empty) { try { ok = !!fn(c); } catch (e) { ok = false; } }
+      all = all && ok;
+      const li = document.createElement('li');
+      li.className = ok ? 'ok' : '';
+      li.innerHTML = fmt(label);
+      li.setAttribute('aria-label', (ok ? 'Splněno: ' : 'Zatím ne: ') + label.replace(/`/g, ''));
+      list.appendChild(li);
+    });
+    markDone(all);
+  }
+  function markDone(all) {
+    const i = st.step;
+    if (all && !st.done.includes(i)) { st.done.push(i); save(); }
+    const next = $('nextBtn');
+    const ready = all && i < STEPS.length - 1;
+    if (ready && !next.classList.contains('ready')) next.classList.add('ready');
+    if (!ready) next.classList.remove('ready');
+    renderDots();
+  }
+
+  /* ---------- Kroky a navigace ---------- */
+  function renderDots() {
+    const nav = $('dots');
+    if (!nav.children.length) {
+      STEPS.forEach((s, i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'dot mono';
+        b.textContent = s.bonus ? '+' : String(i);
+        b.setAttribute('aria-label', (i === 0 ? 'Úvod' : s.bonus ? 'Bonus' : 'Krok ' + i) + ': ' + s.title);
+        b.title = b.getAttribute('aria-label');
+        b.addEventListener('click', () => goStep(i));
+        nav.appendChild(b);
+      });
+    }
+    [...nav.children].forEach((b, i) => {
+      b.classList.toggle('current', i === st.step);
+      b.classList.toggle('done', st.done.includes(i));
+      if (i === st.step) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+    });
+  }
+
+  const LAST_REAL = STEPS.length - 2;
+  function renderStep() {
+    const s = STEPS[st.step], i = st.step;
+    const names = { html: 'index.html', css: 'style.css' };
+    const meta = i === 0 ? 'Úvod · ' + s.min + ' min'
+      : s.bonus ? 'Bonus · zbytek hodiny'
+      : 'Krok ' + i + ' z ' + LAST_REAL + ' · ' + s.files.map(f => names[f]).join(' + ') + ' · ' + s.min + ' min';
+    $('stepMeta').textContent = meta;
+    $('stepTitle').innerHTML = '<span>' + esc(s.title) + '</span>';
+    let body = s.body;
+    if (s.plan) {
+      body += '<ol class="plan">' + STEPS.slice(1).map((x, k) =>
+        '<li><span class="n mono">' + (x.bonus ? '+' : k + 1) + '</span><span>' + esc(x.title) + '</span><span class="min">' + (x.bonus ? 'zbytek' : x.min + ' min') + '</span></li>').join('') + '</ol>';
+    }
+    $('stepBody').innerHTML = body;
+    const sn = $('snippets');
+    sn.innerHTML = '';
+    s.snippets.forEach(x => {
+      const d = document.createElement('div');
+      d.className = 'snippet';
+      const h = document.createElement('div');
+      h.className = 'snippet-head mono';
+      h.textContent = x.where;
+      const p = document.createElement('pre');
+      p.textContent = x.code;
+      d.append(h, p);
+      sn.appendChild(d);
+    });
+    sn.hidden = s.snippets.length === 0;
+    $('checksH').textContent = s.optional ? 'Výzvy navíc' : 'Kontrola';
+    $('tip').innerHTML = s.tip || '';
+    $('tipBox').hidden = !s.tip;
+    $('tipBox').open = false;
+    $('prevBtn').disabled = i === 0;
+    const next = $('nextBtn');
+    next.disabled = i === STEPS.length - 1;
+    next.textContent = i === 0 ? 'Začít →' : i === STEPS.length - 1 ? 'Hotovo' : i === LAST_REAL ? 'Bonus →' : 'Další krok →';
+    const c = $('catchBtn');
+    disarm(c);
+    c.disabled = i === 0;
+    FILES.forEach(f => $('tab-' + f).classList.toggle('wanted', s.files.includes(f) && st.file !== f));
+    $('guideScroll').scrollTop = 0;
+    renderDots();
+  }
+
+  function goStep(i) {
+    if (i < 0 || i >= STEPS.length) return;
+    st.step = i;
+    if (i > 0) st.view = 'mine';
+    if (i > 0 && !STEPS[i].files.includes(st.file)) setFile(STEPS[i].files[0], true);
+    $('nextBtn').classList.remove('ready');
+    save();
+    renderStep();
+    refresh();
+  }
+
+  /* ---------- Editor ---------- */
+  const PLACEHOLDER = {
+    html: 'Prázdný soubor index.html.\nZačněte řádkem <!DOCTYPE html>',
+    css: 'Prázdný soubor style.css.\nCSS začnete psát v kroku 4.'
+  };
+  const FILES = ['html', 'css', 'img'];
+  function setFile(f, quiet) {
+    st.file = f;
+    const isImg = f === 'img';
+    ta.hidden = isImg;
+    $('assets').hidden = !isImg;
+    $('copyBtn').hidden = isImg;
+    $('pos').style.visibility = isImg ? 'hidden' : '';
+    if (isImg) renderAssets();
+    else {
+      ta.value = st[f];
+      ta.placeholder = PLACEHOLDER[f];
+      ta.scrollTop = 0;
+      updatePos();
+    }
+    FILES.forEach(x => {
+      const t = $('tab-' + x);
+      t.setAttribute('aria-selected', String(x === f));
+      t.classList.toggle('wanted', STEPS[st.step].files.includes(x) && x !== f);
+    });
+    if (!quiet) save();
+  }
+  $('tab-html').addEventListener('click', () => { setFile('html'); ta.focus(); });
+  $('tab-css').addEventListener('click', () => { setFile('css'); ta.focus(); });
+  $('tab-img').addEventListener('click', () => setFile('img'));
+
+  /* ---------- Obrázky ---------- */
+  function updateImgTab() {
+    const n = allAssets().length;
+    $('tab-img').textContent = n > 1 ? 'obrázky (' + n + ')' : 'petrin.jpg';
+  }
+  function renderAssets() {
+    const list = $('assetList');
+    list.innerHTML = '';
+    allAssets().forEach(a => {
+      const fig = document.createElement('figure');
+      fig.className = 'asset';
+      const im = document.createElement('img');
+      im.src = a.data;
+      im.alt = 'Soubor ' + a.name;
+      const cap = document.createElement('figcaption');
+      const nm = document.createElement('span');
+      nm.className = 'name mono';
+      nm.textContent = a.name;
+      const meta = document.createElement('span');
+      meta.className = 'meta';
+      const kb = Math.round((a.data.length - a.data.indexOf(',') - 1) * 0.75 / 1024);
+      im.addEventListener('load', () => { meta.textContent = im.naturalWidth + ' × ' + im.naturalHeight + ' px · ' + kb + ' kB'; });
+      cap.append(nm, meta);
+      if (!a.builtin) {
+        const rm = document.createElement('button');
+        rm.type = 'button';
+        rm.className = 'btn small';
+        rm.textContent = 'Odebrat';
+        rm.addEventListener('click', () => {
+          st.assets = st.assets.filter(x => x.name !== a.name);
+          save(); renderAssets(); updateImgTab(); refresh();
+        });
+        cap.appendChild(rm);
+      }
+      fig.append(im, cap);
+      list.appendChild(fig);
+    });
+  }
+  function safeName(n) {
+    const base = n.replace(/\.[^.]+$/, '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'fotka';
+    return base.slice(0, 40) + '.jpg';
+  }
+  $('uploadBtn').addEventListener('click', () => $('upload').click());
+  $('upload').addEventListener('change', e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const msg = $('assetMsg');
+    const reader = new FileReader();
+    reader.onerror = () => { msg.textContent = 'Soubor se nepodařilo načíst. Zkuste jiný obrázek.'; };
+    reader.onload = () => {
+      const im = new Image();
+      im.onerror = () => { msg.textContent = 'Tohle není obrázek, který prohlížeč umí zobrazit. Zkuste JPG nebo PNG.'; };
+      im.onload = () => {
+        const scale = Math.min(1, 1000 / Math.max(im.naturalWidth, im.naturalHeight));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(im.naturalWidth * scale);
+        cv.height = Math.round(im.naturalHeight * scale);
+        const g = cv.getContext('2d');
+        g.fillStyle = '#ffffff';
+        g.fillRect(0, 0, cv.width, cv.height);
+        g.drawImage(im, 0, 0, cv.width, cv.height);
+        let name = safeName(file.name);
+        if (name === 'petrin.jpg') name = 'moje-petrin.jpg';
+        st.assets = (st.assets || []).filter(x => x.name !== name).concat([{ name, data: cv.toDataURL('image/jpeg', 0.84) }]);
+        save();
+        renderAssets();
+        updateImgTab();
+        refresh();
+        msg.textContent = 'Přidáno jako ' + name + '. V index.html napište src="' + name + '".';
+      };
+      im.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  let saveTimer = null;
+  ta.addEventListener('input', () => {
+    st[st.file] = ta.value;
+    if (st.view !== 'mine') st.view = 'mine';
+    schedule();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(save, 500);
+    updatePos();
+  });
+
+  function insert(text) {
+    let ok = false;
+    try { ok = document.execCommand('insertText', false, text); } catch (e) { ok = false; }
+    if (!ok) {
+      ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, 'end');
+      ta.dispatchEvent(new Event('input'));
+    }
+  }
+  let escaped = false;
+  ta.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { escaped = true; return; }
+    if (e.key === 'Tab' && !escaped && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      insert('  ');
+      return;
+    }
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const v = ta.value, pos = ta.selectionStart;
+      const lineStart = v.lastIndexOf('\n', pos - 1) + 1;
+      const indent = (v.slice(lineStart, pos).match(/^[ \t]*/) || [''])[0];
+      const prev = v.slice(lineStart, pos).trimEnd();
+      const extra = /\{$/.test(prev) ? '  ' : '';
+      if (indent || extra) { e.preventDefault(); insert('\n' + indent + extra); }
+    }
+    escaped = false;
+  });
+  function updatePos() {
+    const v = ta.value.slice(0, ta.selectionStart);
+    const line = v.split('\n').length;
+    const col = v.length - v.lastIndexOf('\n');
+    $('pos').textContent = 'ř. ' + line + ', sl. ' + col;
+  }
+  ['keyup', 'click', 'select'].forEach(ev => ta.addEventListener(ev, updatePos));
+
+  /* ---------- Tlačítka ---------- */
+  function arm(btn, label, action) {
+    if (btn.dataset.armed === '1') { disarm(btn); action(); return; }
+    btn.dataset.armed = '1';
+    btn.dataset.label = btn.textContent;
+    btn.textContent = label;
+    btn.classList.add('armed');
+    btn._t = setTimeout(() => disarm(btn), 4000);
+  }
+  function disarm(btn) {
+    if (btn.dataset.armed !== '1') return;
+    clearTimeout(btn._t);
+    btn.dataset.armed = '';
+    btn.textContent = btn.dataset.label;
+    btn.classList.remove('armed');
+  }
+
+  $('nextBtn').addEventListener('click', () => goStep(st.step + 1));
+  $('prevBtn').addEventListener('click', () => goStep(st.step - 1));
+  $('catchBtn').addEventListener('click', e => arm(e.currentTarget, 'Přepsat kód v editoru? Klikněte znovu', () => {
+    const target = STEPS[st.step].bonus ? AFTER[LAST_REAL] : AFTER[st.step];
+    st.html = target.html;
+    st.css = target.css;
+    st.view = 'mine';
+    setFile(st.file);
+    refresh();
+  }));
+  $('resetBtn').addEventListener('click', e => arm(e.currentTarget, 'Smazat vše? Klikněte znovu', () => {
+    Object.assign(st, JSON.parse(JSON.stringify(DEFAULTS)));
+    $('assetMsg').textContent = '';
+    updateImgTab();
+    setFile('html');
+    renderStep();
+    refresh();
+    tick();
+  }));
+  $('copyBtn').addEventListener('click', e => {
+    const btn = e.currentTarget;
+    const text = st[st.file];
+    const flash = msg => { btn.textContent = msg; setTimeout(() => { btn.textContent = 'Kopírovat soubor'; }, 2200); };
+    const fallback = () => { ta.focus(); ta.select(); flash('Označeno, stiskněte Ctrl+C'); };
+    try {
+      navigator.clipboard.writeText(text).then(() => flash('Zkopírováno'), fallback);
+    } catch (err) { fallback(); }
+  });
+  $('viewMine').addEventListener('click', () => { st.view = 'mine'; save(); refresh(); });
+  $('viewGoal').addEventListener('click', () => { st.view = 'goal'; save(); refresh(); });
+
+  /* ---------- Čas hodiny ---------- */
+  const LIMIT = 40 * 60 * 1000;
+  function elapsed() { return st.elapsed + (st.running ? Date.now() - st.startedAt : 0); }
+  function tick() {
+    const ms = elapsed();
+    const s = Math.floor(ms / 1000);
+    $('clock').textContent = String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    $('clockBox').classList.toggle('over', ms > LIMIT);
+    $('clockBtn').textContent = st.running ? 'Pozastavit' : (st.elapsed > 0 ? 'Pokračovat' : 'Spustit čas');
+  }
+  $('clockBtn').addEventListener('click', () => {
+    if (st.running) { st.elapsed = elapsed(); st.running = false; }
+    else { st.startedAt = Date.now(); st.running = true; }
+    save();
+    tick();
+  });
+  setInterval(tick, 1000);
+
+  /* ---------- Start ---------- */
+  if (!Array.isArray(st.assets)) st.assets = [];
+  if (!FILES.includes(st.file)) st.file = 'html';
+  updateImgTab();
+  setFile(st.file, true);
+  renderStep();
+  refresh();
+  tick();
+  save();
+})();
+</script>
+
+</body></html>
